@@ -1,0 +1,340 @@
+#define CoinValue {1, 5, 10}
+#define Button_Value {1, 5, 7, 10}
+#define Button_0_Value 1
+#define Button_1_Value 5
+#define Button_2_Value 7
+#define Button_3_Value 10
+
+/*
+quantifier를 CTL에 맞게 쓰라는 소리임.
+-> Temporal Combinator(X, F, U, G)는 Path Quantifier뒤에 붙어서 나와야 함.
+-> EX, AX, EU, ...
+
+Temporal Combinator
+X : next state // 현재의 다음
+F : a future state // 미래의 언젠가
+G : all the future state // 현재 포함해서 계속
+U : A U B // 해당 state부터 A가 계속 만족되다가 A가 종료되면서 B가 만족되어야 함.
+
+Path quantifier
+A : all the executions out of the current state satisfy property 0 // 현재부터 시작되는 모든 path
+E : from the current state, there exist an execution satisfying 0 // 현재부터 시작되는 path중 적어도 하나
+*/
+
+module main(Coin, Button_0, Button_1, Button_2, Button_3, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Refund, Display, Ramp, Cup, SYJ_TIME, Change){
+	
+	input Coin : CoinValue;
+	input Button_0, Button_1, Button_2, Button_3, Refund : boolean;
+	SYJ_TIME : 0..1000;
+
+	Coin_Ack, Button_0_Ack, Button_1_Ack, Button_2_Ack, Button_3_Ack, Refund_Ack : boolean;
+
+	output Ramp, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Cup : boolean;
+	output Display, Change : 0..100;
+
+	init(SYJ_TIME) := 0;
+	init(Change) := 0;
+
+	init(Ramp) := 0;
+	init(Cup) := 0;
+	/*
+	init(Button_0_Ramp) := 0;
+	init(Button_1_Ramp) := 0;
+	init(Button_2_Ramp) := 0;
+	init(Button_3_Ramp) := 0;
+	*/
+
+	state : {Init_State, Input_State, Coin_Ack_State, Button_0_Ack_State, Button_1_Ack_State, Button_2_Ack_State, Button_3_Ack_State, Refund_Ack_State, Max_Sum_State, Output_Coffee_State};
+
+	inputType : 0..9;
+
+	if((Coin = 1 | Coin = 5 | Coin = 10)) {
+		Coin_Ack := 1;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+
+	} else {
+
+		if(Button_0 = 1) {
+			Coin_Ack := 0;
+			Button_0_Ack := 1;
+			Button_1_Ack := 0;
+			Button_2_Ack := 0;
+			Button_3_Ack := 0;
+			Refund_Ack := 0;
+		} else {
+			if(Button_1 = 1) {
+				Coin_Ack := 0;
+				Button_0_Ack := 0;
+				Button_1_Ack := 1;
+				Button_2_Ack := 0;
+				Button_3_Ack := 0;
+				Refund_Ack := 0;
+			} else {
+				if(Button_2 = 1) {
+					/*inputType := 3;*/
+
+					Coin_Ack := 0;
+					Button_0_Ack := 0;
+					Button_1_Ack := 0;
+					Button_2_Ack := 1;
+					Button_3_Ack := 0;
+					Refund_Ack := 0;
+				} else {
+					if(Button_3 = 1) {
+						/*inputType := 4;*/
+
+						Coin_Ack := 0;
+						Button_0_Ack := 0;
+						Button_1_Ack := 0;
+						Button_2_Ack := 0;
+						Button_3_Ack := 1;
+						Refund_Ack := 0;
+					} else {
+						if(Refund = 1) {
+							/*inputType := 5;*/
+							Coin_Ack := 0;
+							Button_0_Ack := 0;
+							Button_1_Ack := 0;
+							Button_2_Ack := 0;
+							Button_3_Ack := 0;
+							Refund_Ack := 1;
+						}
+					}
+				}		
+			}
+		}
+	}
+
+	그래서
+	
+
+	Sum : 0..100;
+	init(Sum) := Coin;
+
+	Display := Sum;
+
+	b1, b2  : boolean;
+	init(b1) := 0;
+	init(b2) := 0;
+
+/*
+	if(Sum >= Button_0_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_1_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_2_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 0;
+	} else if(Sum > Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 1;
+	} else {
+		Button_0_Ramp := 0;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	}
+*/
+
+	if(Sum >= Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 1;
+	} else if(Sum >= Button_2_Value & Sum < Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_1_Value & Sum < Button_2_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_0_Value & Sum < Button_1_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum < Button_0_Value) {
+		Button_0_Ramp := 0;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	}
+	
+	if(Coin_Ack = 1) 
+	{
+		/*
+		next(b1) := 1;
+		next(b2) := 0;
+		*/
+		if(Sum + Coin <= 100) {
+			next(Sum) := Sum + Coin;
+			next(Change) := 0;
+			next(Cup) := 0;
+		} else {
+			next(Sum) := Sum;
+			next(Change) := Coin;
+			next(Cup) := 0;
+		}
+		
+	} else if(Button_0_Ack = 1) {
+		/*
+		next(b1) := 0;
+		next(b2) := 1;
+		*/
+		next(Sum) := Sum - Button_0_Value;
+		next(Change) := 0;
+		next(Cup) := 1;
+
+	} else if(Button_1_Ack = 1) {
+		next(Sum) := Sum - Button_1_Value;
+		next(Change) := 0;
+		next(Cup) := 1;
+	} else if(Button_2_Ack = 1) {
+		next(Sum) := Sum - Button_2_Value;
+		next(Change) := 0;
+		next(Cup) := 1;
+	} else if(Button_3_Ack = 1) {
+		next(Sum) := Sum - Button_3_Value;
+		next(Change) := 0;
+		next(Cup) := 1;
+	} else if(Refund_Ack = 1) {
+		next(Sum) := 0;
+		next(Change) := Sum;
+		next(Cup) := 0;
+
+	}
+	
+
+/*
+	if(Coin_Ack = 1) 
+	{
+		next(b1) := 1;
+		next(b2) := 0;
+	} else {
+		if(Button_1_Ack = 1) {
+		next(b1) := 0;
+		next(b2) := 1;
+		}
+
+	}
+*/
+
+
+	/* -> 연산자 */
+	p, q : boolean;
+	p := 1;
+	q := 0;
+	/* 00, 01, 10, 11 중에서 10만 0이 나옴. */
+
+	/*//////////////////////////////*/
+
+	/* pq : SPEC AG (p -> q); */
+
+	/* XOR
+	a, b : boolean;
+	a := 0;
+	b := 1;
+	temp : SPEC EF ((~a & b) | (a & ~b));
+	*/
+
+	/* 
+		Ack가 한 번에 하나 이상이 들어오지 않으며(booleant), 항상 하나 이상의 Ack는 들어온다(alwaysInputAck)
+		~을 없앰, ~을 붙임 을 해서 결과를 바꿨을 경우 SMV에 잡힘.
+	 */
+
+	/*       //////////// -> 사용 /////////////////
+
+	-> 가 있는 경우에 대해서 false를 만들고 싶으면
+	A -> B에서 A -> ~B가 아니라
+	~(A -> B) 여야 함.
+
+	SumTest : SPEC AG ((Coin_Ack = 1 & Refund_Ack = 0) -> AX (Sum > 0)); 에서
+	SumTest : SPEC AG ((Coin_Ack = 1 & Refund_Ack = 0) -> AX ~(Sum > 0)); 가 아니라
+	SumTest : SPEC AG ~((Coin_Ack = 1 & Refund_Ack = 0) -> AX (Sum > 0)); 라고요
+
+	*/
+
+
+	booleant : SPEC AX EF ~(b1 = b2);
+
+	/* 모든 Ack가 동시에 1이 되는 경우는 없음. */
+	alwaysInputAck : SPEC EF ((Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack) = 0);
+
+	/* Coin_Ack가 들어왔는데 Refund Sum이 0보다 작은 경우는 없음. */
+	prop2 : SPEC AG ((Coin_Ack = 1) -> AX (Sum > 0));
+	SumTest_1 : SPEC EF ~((Coin_Ack = 1) -> AX (Sum <= 0));
+
+
+	/* Refund_Ack가 들어오면 Sum은 0이 됨. */
+	prop3 : SPEC AG ((Refund_Ack = 1) -> AX (Sum = 0));
+	RefundTest_1 : SPEC AG ((Refund_Ack = 1) -> (Sum = 0));
+	RefundTest_2 : SPEC EF ((Refund_Ack) -> ((Button_0_Ramp | Button_1_Ramp | Button_2_Ramp | Button_3_Ramp)));
+
+	/* Display는 항상 Sum의 값을 보여준다. */
+	DisplayTest : SPEC EF ~(Display ~= Sum);
+
+	/* Sum은 항상 100보다 클 수 없다. */
+	SumMaxTest : SPEC AG (Sum <= 100);
+	SumMaxTest2 : SPEC EF ~(Sum > 100);
+	/* SumMaxTest3 : SPEC AG ~(Sum = 100); */
+
+	mutex : assert ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack);
+
+	/* mutex2 : SPEC AG ~(Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund); */
+	mutex3 : SPEC EF (Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund);
+
+	/* mutex4 : SPEC AG ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack); */
+	/* mutex5 : SPEC EF (Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack); */
+
+	/* Button_3_Value 이상의 값이 들어올 경우 모든 Ramp에 불이 들어온다 */
+	/* Button_2_Value <= Sum < Button_3_Value 면 Button_3_Ramp = 0이고 Button_2_Ramp = 1임 */
+	checkButtonRamp3 : SPEC AG ((Sum > Button_3_Value) -> (Button_0_Ramp & Button_1_Ramp & Button_2_Ramp & Button_3_Ramp));
+	checkButtonRamp2_1 : SPEC EF ~((Sum < Button_3_Value ) & Button_3_Ramp = 1);
+	checkButtonRamp2_2 : SPEC AG ((Sum >= Button_2_Value) -> (Button_2_Ramp));
+	checkButtonRamp2_3 : SPEC AG (((Sum < Button_3_Value) & (Sum >= Button_2_Value) ) -> (Button_3_Ramp = 0 & Button_2_Ramp = 1));
+
+
+	prop0 : SPEC AG ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack);
+	prop1 : SPEC AG (((Coin > 0) | Button_0 | Button_1 | Button_2 | Button_3 | Refund) -> ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack));
+
+	
+	
+	
+	prop4 : SPEC AG ((Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1) -> AX ~Cup);
+	prop5 : SPEC AG (Button_0_Ack = 1) -> AX Sum <= Sum;
+	prop6 : SPEC AG ((Cup = 1) -> AX (~Cup));
+	prop6Counter : SPEC AG ((Cup = 1) -> AX (Cup));
+	prop7 : SPEC AG ((Coin > 0) & (Refund = 1)) -> AX (Sum > 0);
+	prop8 : SPEC AG ~(Sum > 100);
+	prop9 : SPEC (Refund_Ack = 1) -> EF ((Change > Sum) | (Change < Sum));
+
+
+
+
+	/* prop9 : SPEC EF ~((~Ramp & Cup) | (Ramp & ~Cup)); */
+
+	
+
+
+
+	/* SPEC AG EX 1; */
+
+
+}

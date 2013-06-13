@@ -1,0 +1,468 @@
+#define CoinValue {1, 5, 10}
+#define Button_Value {1, 5, 10, 7}
+#define Button_0_Value 1
+#define Button_1_Value 5
+#define Button_2_Value 10
+#define Button_3_Value 7
+
+/*
+quantifier를 CTL에 맞게 쓰라는 소리임.
+-> Temporal Combinator(X, F, U, G)는 Path Quantifier뒤에 붙어서 나와야 함.
+-> EX, AX, EU, ...
+
+Temporal Combinator
+X : next state // 현재의 다음
+F : a future state // 미래의 언젠가
+G : all the future state // 현재 포함해서 계속
+U : A U B // 해당 state부터 A가 계속 만족되다가 A가 종료되면서 B가 만족되어야 함.
+
+Path quantifier
+A : all the executions out of the current state satisfy property 0 // 현재부터 시작되는 모든 path
+E : from the current state, there exist an execution satisfying 0 // 현재부터 시작되는 path중 적어도 하나
+*/
+
+module main(Coin, Button_0, Button_1, Button_2, Button_3, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Refund, Display, Ramp, Cup, SYJ_TIME, Change){
+	
+	/* input Coin : {1, 5, 10}; */
+	input Coin : CoinValue;
+	/*input Coin : 1..10;*/
+	input Button_0, Button_1, Button_2, Button_3, Refund : boolean;
+	/*input SYJ_TIME : 0..1000;*/
+	SYJ_TIME : 0..1000;
+
+	CoinAck, Button_0_Ack, Button_1_Ack, Button_2_Ack, Button_3_Ack, Refund_Ack : boolean;
+
+	output Ramp, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Cup : boolean;
+	output Display, Change : 0..100;
+
+	/* init conde */
+	/* init input */
+	/* init(Coin) := 0; */
+	/*init(Coin) := CoinValue;*/
+	init(SYJ_TIME) := 0;
+/*
+	init(Button_0) := 0;
+	init(Button_1) := 0;
+	init(Button_2) := 0;
+	init(Button_3) := 0;
+*/
+
+	/* init output */
+	/* init(Display) := 0; */
+	init(Change) := 0;
+
+
+	init(Ramp) := 0;
+	init(Cup) := 0;
+	init(Button_0_Ramp) := 0;
+	init(Button_1_Ramp) := 0;
+	init(Button_2_Ramp) := 0;
+	init(Button_3_Ramp) := 0;
+
+
+	inputType : 0..9;
+
+
+/*
+	if((Coin = 1 | Coin = 5 | Coin = 10) & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0) {
+		inputType := 0;
+	} else if (Coin ~= 1 & Coin ~= 5 & Coin ~= 10 & Button_0 = 1 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0) {
+		inputType := 1;
+	} else if (Coin ~= 1 & Coin ~= 5 & Coin ~= 10 & Button_0 = 0 & Button_1 = 1 & Button_2 = 0 & Button_3 = 0 & Refund = 0) {
+		inputType := 2;
+	} else if (Coin ~= 1 & Coin ~= 5 & Coin ~= 10 & Button_0 = 0 & Button_1 = 0 & Button_2 = 1 & Button_3 = 0 & Refund = 0) {
+		inputType := 3;
+	} else if (Coin ~= 1 & Coin ~= 5 & Coin ~= 10 & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 1 & Refund = 0) {
+		inputType := 4;
+	} else if ((Coin ~= 1 & Coin ~= 5 & Coin ~= 10) & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 1) {
+		inputType := 5;
+	} else {
+		inputType := 9;
+	}
+*/
+
+
+	if((Coin = 1 | Coin = 5 | Coin = 10)) {
+		/*inputType := 0;*/
+
+		next(SYJ_TIME) := SYJ_TIME + 10;
+		CoinAck := 1;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+
+	} else {
+
+		if(Button_0 = 1) {
+			/*inputType := 1;*/
+
+			next(SYJ_TIME) := SYJ_TIME + 10;
+			CoinAck := 0;
+			Button_0_Ack := 1;
+			Button_1_Ack := 0;
+			Button_2_Ack := 0;
+			Button_3_Ack := 0;
+			Refund_Ack := 0;
+		} else {
+			if(Button_1 = 1) {
+				/*inputType := 2;*/
+
+				next(SYJ_TIME) := SYJ_TIME + 10;
+				CoinAck := 0;
+				Button_0_Ack := 0;
+				Button_1_Ack := 1;
+				Button_2_Ack := 0;
+				Button_3_Ack := 0;
+				Refund_Ack := 0;
+			} else {
+				if(Button_2 = 1) {
+					/*inputType := 3;*/
+
+					next(SYJ_TIME) := SYJ_TIME + 10;
+					CoinAck := 0;
+					Button_0_Ack := 0;
+					Button_1_Ack := 0;
+					Button_2_Ack := 1;
+					Button_3_Ack := 0;
+					Refund_Ack := 0;
+				} else {
+					if(Button_3 = 1) {
+						/*inputType := 4;*/
+
+						next(SYJ_TIME) := SYJ_TIME + 10;
+						CoinAck := 0;
+						Button_0_Ack := 0;
+						Button_1_Ack := 0;
+						Button_2_Ack := 0;
+						Button_3_Ack := 1;
+						Refund_Ack := 0;
+					} else {
+						if(Refund = 1) {
+							/*inputType := 5;*/
+
+							next(SYJ_TIME) := SYJ_TIME + 10;
+							CoinAck := 0;
+							Button_0_Ack := 0;
+							Button_1_Ack := 0;
+							Button_2_Ack := 0;
+							Button_3_Ack := 0;
+							Refund_Ack := 1;
+						}
+					}
+				}		
+			}
+		}
+	}
+
+/*
+	if(inputType = 0) {
+		CoinAck := 1;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+	} else if(inputType = 1) {
+		CoinAck := 0;
+		Button_0_Ack := 1;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+	} else if(inputType = 2) {
+		CoinAck := 0;
+		Button_0_Ack := 0;
+		Button_1_Ack := 1;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+	} else if(inputType = 3) {
+		CoinAck := 0;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 1;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+	} else if(inputType = 4) {
+		CoinAck := 0;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 1;
+		Refund_Ack := 0;
+	} else if(inputType = 5) {
+		CoinAck := 0;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 1;
+	}
+
+*/
+
+	/* setting var */
+
+/*
+	if(Coin > 0) {
+		CoinAck := 1;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+
+	} else {
+		CoinAck := 0;
+		Button_0_Ack := ~CoinAck & Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+		Button_1_Ack := ~CoinAck & ~Button_0 & Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+		Button_2_Ack := ~CoinAck & ~Button_0 & ~Button_1 & Button_2 & ~Button_3 & ~Refund;
+		Button_3_Ack := ~CoinAck & ~Button_0 & ~Button_1 & ~Button_2 & Button_3 & ~Refund;
+		Refund_Ack := ~CoinAck & ~Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & Refund;
+	}
+*/
+
+	/*
+		CoinAck := ~(~Coin);
+		Button_0_Ack := ~CoinAck & Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+		Button_1_Ack := ~CoinAck & ~Button_0 & Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+		Button_2_Ack := ~CoinAck & ~Button_0 & ~Button_1 & Button_2 & ~Button_3 & ~Refund;
+		Button_3_Ack := ~CoinAck & ~Button_0 & ~Button_1 & ~Button_2 & Button_3 & ~Refund;
+		Refund_Ack := ~CoinAck & ~Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & Refund;
+	*/
+	
+
+
+/*
+	CoinAck := ~~Coin & ~Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+	Button_0_Ack := ~Coin & Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+	Button_1_Ack := ~Coin & ~Button_0 & Button_1 & ~Button_2 & ~Button_3 & ~Refund;
+	Button_2_Ack := ~Coin & ~Button_0 & ~Button_1 & Button_2 & ~Button_3 & ~Refund;
+	Button_3_Ack := ~Coin & ~Button_0 & ~Button_1 & ~Button_2 & Button_3 & ~Refund;
+	Refund_Ack := ~Coin & ~Button_0 & ~Button_1 & ~Button_2 & ~Button_3 & Refund;
+*/
+	
+
+	Sum : 0..100;
+	init(Sum) := Coin;
+
+	Display := Sum;
+
+	/* logic for inputCoin */
+
+
+	if(Sum >= Button_0_Value) {
+		next(Button_0_Ramp) := 1;
+	} else if(Sum >= Button_1_Value) {
+		next(Button_1_Ramp) := 1;
+	} else if(Sum >= Button_2_Value) {
+		next(Button_2_Ramp) := 1;
+	} else if(Sum >= Button_3_Value) {
+		next(Button_3_Ramp) := 1;
+	} else if(Sum < Button_0_Value) {
+		next(Button_0_Ramp) := 0;
+	} else if(Sum < Button_1_Value) {
+		next(Button_1_Ramp) := 0;
+	} else if(Sum < Button_2_Value) {
+		next(Button_2_Ramp) := 0;
+	} else if(Sum < Button_3_Value) {
+		next(Button_3_Ramp) := 0;
+	}
+
+	
+	/*
+	if(CoinAck = 1) {
+
+		if(Sum + Coin <= 100 ) {
+			next(Sum) := Sum + Coin;
+			
+		} else {
+			next(Sum) := Sum;
+			next(Change) := Coin;
+		}
+		next(Ramp) := 0;
+		next(Cup) := 0;
+
+	} else if(Button_0_Ack = 1) {
+		if((Sum > Button_0_Value)) {
+			next(Sum) := Sum - Button_0_Value;
+			next(Ramp) := 1;
+			next(Cup) := 1;
+			next(Change) := 0;
+		}
+		
+	} else if(Button_1_Ack = 1) {
+		if((Sum > Button_1_Value)) {
+			next(Sum) := Sum - Button_1_Value;
+			next(Ramp) := 1;
+			next(Cup) := 1;
+			next(Change) := 0;
+		}
+	} else if(Button_2_Ack = 1) {
+		if((Sum > Button_2_Value)) {
+			next(Sum) := Sum - Button_2_Value;
+			next(Ramp) := 1;
+			next(Cup) := 1;
+			next(Change) := 0;
+		}
+	} else if(Button_3_Ack = 1) {
+		if((Sum > Button_3_Value)) {
+			next(Sum) := Sum - Button_3_Value;
+			next(Ramp) := 1;
+			next(Cup) := 1;
+			next(Change) := 0;
+		}
+	} else if(Refund_Ack = 1) {
+		next(Sum) := 0;
+		next(Ramp) := 0;
+		next(Cup) := 0;
+		next(Change) := Sum;
+	} else {
+		next(Ramp) := 0;
+		next(Cup) := 0;
+		next(Change) := 0;
+	}
+	*/
+
+	if(CoinAck = 1) {
+		if(Sum + Coin <= 100 ) {
+			next(Sum) := Sum + Coin;
+			next(Ramp) := 0;
+			next(Cup) := 0;
+		} else {
+			next(Sum) := Sum;
+			next(Change) := Coin;
+			next(Ramp) := 0;
+			next(Cup) := 0;
+		}
+
+
+	} else {
+		if(Button_0_Ack = 1) {
+			if((Sum > Button_0_Value)) {
+				next(Sum) := Sum - Button_0_Value;
+				next(Ramp) := 1;
+				next(Cup) := 1;
+				next(Change) := 0;
+			}
+
+		} else {
+			if(Button_1_Ack = 1) {
+				if((Sum > Button_1_Value)) {
+					next(Sum) := Sum - Button_1_Value;
+					next(Ramp) := 1;
+					next(Cup) := 1;
+					next(Change) := 0;
+				}
+			} else {
+				if(Button_2_Ack = 1) {
+					if((Sum > Button_2_Value)) {
+						next(Sum) := Sum - Button_2_Value;
+						next(Ramp) := 1;
+						next(Cup) := 1;
+						next(Change) := 0;
+					}
+				} else {
+					if(Button_3_Ack = 1) {
+						if((Sum > Button_3_Value)) {
+							next(Sum) := Sum - Button_3_Value;
+							next(Ramp) := 1;
+							next(Cup) := 1;
+							next(Change) := 0;
+						}
+					} else {
+						if(Refund = 1) {
+							next(Sum) := 0;
+							next(Ramp) := 0;
+							next(Cup) := 0;
+							next(Change) := Sum;
+						} else {
+
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+
+
+
+/*
+	if(Button_0_Ramp = 1 & Button_0 = 1)
+	{
+		next(Sum) := Sum - Button_0_Value;
+		next(Ramp) := 1;
+	} else if (Button_1_Ramp = 1 & Button_1 = 1) {
+		next(Sum) := Sum - Button_1_Value;
+		next(Ramp) := 1;
+	} else if (Button_2_Ramp = 1 & Button_2 = 1) {
+		next(Sum) := Sum - Button_2_Value;
+		next(Ramp) := 1;
+	} else if (Button_3_Ramp = 1 & Button_3 = 1) {
+		next(Sum) := Sum - Button_3_Value;
+		next(Ramp) := 1;
+	}
+*/
+	
+
+
+
+	/*///////////////////////////////*/
+
+	
+
+	/*//////////////////////////////*/
+
+
+	p, q : boolean;
+	p := 1;
+	q := 0;
+	/* 00, 01, 10, 11 중에서 10만 0이 나옴. */
+
+	/*//////////////////////////////*/
+
+	/* pq : SPEC AG (p -> q); */
+
+
+	mutex : assert ~(CoinAck & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack);
+
+	/* mutex2 : SPEC AG ~(Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund); */
+	mutex3 : SPEC EF (Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund);
+
+	/* mutex4 : SPEC AG ~(CoinAck & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack); */
+	/* mutex5 : SPEC EF (CoinAck & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack); */
+
+	prop0 : SPEC AG ~(CoinAck & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack);
+	prop1 : SPEC AG (((Coin > 0) | Button_0 | Button_1 | Button_2 | Button_3 | Refund) -> ~(CoinAck & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack));
+
+	
+	prop2 : SPEC AG (CoinAck = 1) -> AX (Sum > 0);
+	prop3 : SPEC (Refund_Ack = 1) -> AX (Sum < 0);
+	prop4 : SPEC AG ((Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1) -> AX Cup);
+	prop5 : SPEC AG (Button_0_Ack = 1) -> AX Sum <= Sum;
+	prop6 : SPEC AG ((Cup = 1) -> AX (~Cup));
+	prop7 : SPEC AG ((Coin > 0) & (Refund = 1)) -> AX (Sum > 0);
+	prop8 : SPEC AG ~(Sum > 100);
+	prop9 : SPEC (Refund_Ack = 1) -> EF ((Change > Sum) | (Change < Sum));
+
+
+
+	/* prop9 : SPEC EF ~((~Ramp & Cup) | (Ramp & ~Cup)); */
+
+	/*
+	a, b : boolean;
+	a := 0;
+	b := 1;
+	temp : SPEC EF ~((~a & b) | (a & ~b));
+	*/
+
+
+
+	/* SPEC AG EX 1; */
+
+
+}

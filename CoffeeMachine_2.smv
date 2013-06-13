@@ -1,0 +1,621 @@
+#define CoinValue {0, 1, 5, 10}
+#define Button_Value {1, 5, 7, 10}
+#define Button_0_Value 1
+#define Button_1_Value 5
+#define Button_2_Value 7
+#define Button_3_Value 10
+
+/*
+quantifier를 CTL에 맞게 쓰라는 소리임.
+-> Temporal Combinator(X, F, U, G)는 Path Quantifier뒤에 붙어서 나와야 함.
+-> EX, AX, EU, ...
+
+Temporal Combinator
+X : next state // 현재의 다음
+F : a future state // 미래의 언젠가
+G : all the future state // 현재 포함해서 계속
+U : A U B // 해당 state부터 A가 계속 만족되다가 A가 종료되면서 B가 만족되어야 함.
+
+Path quantifier
+A : all the executions out of the current state satisfy property 0 // 현재부터 시작되는 모든 path
+E : from the current state, there exist an execution satisfying 0 // 현재부터 시작되는 path중 적어도 하나
+*/
+
+/*
+
+기존 코드의 문제점은
+#define CoinValue {1, 5, 10} 
+로 Coin이 들어오지 않는 경우가 없었음.
+따라서 항상 Coin_Ack가 1이 됐으며 이로 인해
+다른 입력에 대한 처리가 제대로 되지 않은 것임.
+
+SPEC EF (Coin = 0);
+이게 안됐음.
+
+현재 수정한 우선순위는
+Coin > Button_N > Refund > NoInput
+
+
+
+동전 잔고 체크
+컵, 커피 잔고 체크
+있음/없음 표시.
+시간 조건 추가(refund 누르고 돈이 나올 때까지의 시간)
+idle // 버튼에 불이 들어왔을 때 몇 초동안 누르지 않으면 돈 반환.
+
+Coin_Remain
+Cup_Remain
+Coffee_0_Remain
+Coffee_1_Remain
+Coffee_2_Remain
+Coffee_3_Remain
+
+Cup_Available
+Coffee_0_Available
+Coffee_1_Available
+Coffee_2_Available
+Coffee_3_Available
+
+*/
+
+/* module main(Coin, Button_0, Button_1, Button_2, Button_3, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Refund, Display, Ramp, Cup, SYJ_TIME, Change, Coin_Remain, Cup_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain){ */
+module main(Coin, Button_0, Button_1, Button_2, Button_3, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Refund,
+			/* Display, Ramp, Cup, SYJ_TIME, Change, Coin_Remain, Cup_Remain, Coffee_0_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain, */
+			Display, Ramp, Cup, SYJ_TIME, Change,
+			Cup_Available, Coffee_0_Available, Coffee_1_Available, Coffee_2_Available, Coffee_3_Available){
+	
+	input Coin : CoinValue;
+	input Button_0, Button_1, Button_2, Button_3, Refund : boolean;
+
+	Coin_Ack, Button_0_Ack, Button_1_Ack, Button_2_Ack, Button_3_Ack, Refund_Ack, NoInput_Ack : boolean;
+
+	output Ramp, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Cup : boolean;
+
+	output Display, Change: 0..100;
+	output SYJ_TIME : 0..1000;
+	/* output Coin_Remain : 0..100; */
+	Coin_Remain : 0..100;
+
+	/* added */
+	Cup_Remain : 0..10;
+	/* output Cup_Remain : 0..10; */
+	Coffee_0_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain : 0..5;
+	/* output Coffee_0_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain : 0..5; */
+	IdleTimeCount : 0..2;
+
+	output Cup_Available, Coffee_0_Available, Coffee_1_Available, Coffee_2_Available, Coffee_3_Available : boolean;
+
+	init(Coin_Remain) := 50;
+	init(Cup_Remain) := 5;
+	init(Coffee_0_Remain) := 1;
+	init(Coffee_1_Remain) := 5;
+	init(Coffee_2_Remain) := 5;
+	init(Coffee_3_Remain) := 5;
+	init(IdleTimeCount) := 0;
+
+/*
+	init(Coffee_0_Available) := 1;
+	init(Coffee_1_Available) := 1;
+	init(Coffee_2_Available) := 1;
+	init(Coffee_3_Available) := 1;
+*/
+
+	/* TODO: available의 초기화 시점. next를 쓰는 것이 맞는가 */
+	if(Cup_Remain = 0) {
+		/*init(Cup_Available) := 1;*/
+		Cup_Available := 0;
+	} else {
+		/*init(Cup_Available) := 0;*/
+		Cup_Available := 1;
+	}
+	if(Coffee_0_Remain = 0) {
+		/*init(Coffee_0_Available) := 1;*/
+		Coffee_0_Available := 0;
+	} else {
+		/*init(Coffee_0_Available) := 0;*/
+		Coffee_0_Available := 1;
+	}
+	if(Coffee_1_Remain = 0) {
+		/*init(Coffee_1_Available) := 1;*/
+		Coffee_1_Available := 0;
+	} else {
+		/*init(Coffee_1_Available) := 0;*/
+		Coffee_1_Available := 1;
+	}
+	if(Coffee_2_Remain = 0) {
+		/*init(Coffee_2_Available) := 1;*/
+		Coffee_2_Available := 0;
+	} else {
+		/*init(Coffee_2_Available) := 0;*/
+		Coffee_2_Available := 1;
+	}
+	if(Coffee_3_Remain = 0) {
+		/*init(Coffee_3_Available) := 1;*/
+		Coffee_3_Available := 0;
+	} else {
+		/*init(Coffee_3_Available) := 0;*/
+		Coffee_3_Available := 1;
+	}
+
+
+	
+
+	
+	init(Change) := 0;
+
+	init(Ramp) := 0;
+	init(Cup) := 0;
+	/* Cup := 0; */
+	/*
+	init(Button_0_Ramp) := 0;
+	init(Button_1_Ramp) := 0;
+	init(Button_2_Ramp) := 0;
+	init(Button_3_Ramp) := 0;
+	*/
+
+	state : {Init_State, Input_State, Coin_Ack_State, Button_0_Ack_State, Button_1_Ack_State, Button_2_Ack_State, Button_3_Ack_State, Refund_Ack_State, Max_Sum_State, Output_Coffee_State};
+	init(state) := Init_State;
+
+	init(SYJ_TIME) := 0;
+	next(SYJ_TIME) := SYJ_TIME + 10;
+
+	inputType : 0..9;
+
+	if(Coin = 1 | Coin = 5 | Coin = 10) {
+		Coin_Ack := 1;
+		Button_0_Ack := 0;
+		Button_1_Ack := 0;
+		Button_2_Ack := 0;
+		Button_3_Ack := 0;
+		Refund_Ack := 0;
+		NoInput_Ack := 0;
+
+	} else {
+
+		if(Button_0 = 1) {
+			Coin_Ack := 0;
+			Button_0_Ack := 1;
+			Button_1_Ack := 0;
+			Button_2_Ack := 0;
+			Button_3_Ack := 0;
+			Refund_Ack := 0;
+			NoInput_Ack := 0;
+		} else {
+			if(Button_1 = 1) {
+				Coin_Ack := 0;
+				Button_0_Ack := 0;
+				Button_1_Ack := 1;
+				Button_2_Ack := 0;
+				Button_3_Ack := 0;
+				Refund_Ack := 0;
+				NoInput_Ack := 0;
+			} else {
+				if(Button_2 = 1) {
+					/*inputType := 3;*/
+
+					Coin_Ack := 0;
+					Button_0_Ack := 0;
+					Button_1_Ack := 0;
+					Button_2_Ack := 1;
+					Button_3_Ack := 0;
+					Refund_Ack := 0;
+					NoInput_Ack := 0;
+				} else {
+					if(Button_3 = 1) {
+						/*inputType := 4;*/
+
+						Coin_Ack := 0;
+						Button_0_Ack := 0;
+						Button_1_Ack := 0;
+						Button_2_Ack := 0;
+						Button_3_Ack := 1;
+						Refund_Ack := 0;
+						NoInput_Ack := 0;
+					} else {
+						if(Refund = 1) {
+							/*inputType := 5;*/
+							Coin_Ack := 0;
+							Button_0_Ack := 0;
+							Button_1_Ack := 0;
+							Button_2_Ack := 0;
+							Button_3_Ack := 0;
+							Refund_Ack := 1;
+							NoInput_Ack := 0;
+						} else {
+							if(Coin = 0) {
+								Coin_Ack := 0;
+								Button_0_Ack := 0;
+								Button_1_Ack := 0;
+								Button_2_Ack := 0;
+								Button_3_Ack := 0;
+								Refund_Ack := 0;
+								NoInput_Ack := 1;
+							}
+						}
+					}
+				}		
+			}
+		}
+	}
+
+	
+
+	Sum : 0..100;
+	init(Sum) := Coin;
+
+	Display := Sum;
+
+	b1, b2  : boolean;
+	init(b1) := 0;
+	init(b2) := 0;
+
+/*
+	if(Sum >= Button_0_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_1_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_2_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 0;
+	} else if(Sum > Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 1;
+	} else {
+		Button_0_Ramp := 0;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	}
+*/
+
+	if(Sum >= Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 1;
+	} else if(Sum >= Button_2_Value & Sum < Button_3_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 1;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_1_Value & Sum < Button_2_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 1;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum >= Button_0_Value & Sum < Button_1_Value) {
+		Button_0_Ramp := 1;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	} else if(Sum < Button_0_Value) {
+		Button_0_Ramp := 0;
+		Button_1_Ramp := 0;
+		Button_2_Ramp := 0;
+		Button_3_Ramp := 0;
+	}
+	
+	if(Coin_Ack = 1) 
+	{
+		next(IdleTimeCount) := 0;
+		/*
+		next(b1) := 1;
+		next(b2) := 0;
+		*/
+		if(Sum + Coin <= 100) {
+			next(Sum) := Sum + Coin;
+			next(Change) := 0;
+			next(Cup) := 0;
+		} else {
+			next(Sum) := Sum;
+			next(Change) := Coin;
+			next(Cup) := 0;
+		}
+		
+	} else if(Button_0_Ack = 1) {
+		next(IdleTimeCount) := 0;
+		/*
+		next(b1) := 0;
+		next(b2) := 1;
+		*/
+		/* if(Sum - Button_0_Value >= 0) {    */ /* 원래 저걸로 동작했었음.  아래도 다 마찬가지.*/
+		if(Sum - Button_0_Value >= 0 & Coffee_0_Remain > 0 & Cup_Remain > 0) {
+			next(Sum) := Sum - Button_0_Value;
+			next(Change) := 0;
+			next(Cup) := 1;
+			next(Cup_Remain) := Cup_Remain - 1;
+			next(Coffee_0_Remain) := Coffee_0_Remain - 1;
+		} else if(Cup_Remain = 0) {
+			next(Cup) := 0;
+		}
+		
+
+	} else if(Button_1_Ack = 1) {
+		next(IdleTimeCount) := 0;
+		if(Sum - Button_1_Value >= 0 & Coffee_1_Remain > 0 & Cup_Remain > 0) {
+			next(Sum) := Sum - Button_1_Value;
+			next(Change) := 0;
+			next(Cup) := 1;
+			next(Cup_Remain) := Cup_Remain - 1;
+			next(Coffee_1_Remain) := Coffee_1_Remain - 1;
+		} else if(Cup_Remain = 0) {
+			next(Cup) := 0;
+		}
+	} else if(Button_2_Ack = 1) {
+		next(IdleTimeCount) := 0;
+		if(Sum - Button_2_Value >= 0 & Coffee_2_Remain > 0 & Cup_Remain > 0) {
+			next(Sum) := Sum - Button_2_Value;
+			next(Change) := 0;
+			next(Cup) := 1;
+			next(Cup_Remain) := Cup_Remain - 1;
+			next(Coffee_2_Remain) := Coffee_2_Remain - 1;
+		} else if(Cup_Remain = 0) {
+			next(Cup) := 0;
+		}
+	} else if(Button_3_Ack = 1) {
+		next(IdleTimeCount) := 0;
+		if(Sum - Button_3_Value >= 0 & Coffee_3_Remain > 0 & Cup_Remain > 0) {
+			next(Sum) := Sum - Button_3_Value;
+			next(Change) := 0;
+			next(Cup) := 1;
+			next(Cup_Remain) := Cup_Remain - 1;
+			next(Coffee_3_Remain) := Coffee_3_Remain - 1;
+		} else if(Cup_Remain = 0) {
+			next(Cup) := 0;
+		}
+	} else if(Refund_Ack = 1) {
+		next(Sum) := 0;
+		next(Change) := Sum;
+		next(Cup) := 0;
+		next(IdleTimeCount) := 0;
+
+	} else if(NoInput_Ack = 1) {
+		next(Cup) := 0;
+
+		if(IdleTimeCount < 2) {
+			next(IdleTimeCount) := IdleTimeCount + 1;
+		} else {
+			next(IdleTimeCount) := 0;
+			next(Change) := Sum;
+			next(Sum) := 0;
+		}
+		
+
+
+	}
+	
+
+/*
+	if(Coin_Ack = 1) 
+	{
+		next(b1) := 1;
+		next(b2) := 0;
+	} else {
+		if(Button_1_Ack = 1) {
+		next(b1) := 0;
+		next(b2) := 1;
+		}
+
+	}
+*/
+
+	/* -> 연산자 */
+	p, q : boolean;
+	p := 1;
+	q := 0;
+	/* 00, 01, 10, 11 중에서 10만 0이 나옴. */
+
+	/*//////////////////////////////*/
+
+	/* pq : SPEC AG (p -> q); */
+
+	/* XOR
+	a, b : boolean;
+	a := 0;
+	b := 1;
+	temp : SPEC EF ((~a & b) | (a & ~b));
+	*/
+
+	/* 
+		Ack가 한 번에 하나 이상이 들어오지 않으며(booleant), 항상 하나 이상의 Ack는 들어온다(alwaysInputAck)
+		~을 없앰, ~을 붙임 을 해서 결과를 바꿨을 경우 SMV에 잡힘.
+	 */
+
+	/*       //////////// -> 사용 /////////////////
+
+	-> 가 있는 경우에 대해서 false를 만들고 싶으면
+	A -> B에서 A -> ~B가 아니라
+	~(A -> B) 여야 함.
+
+	SumTest : SPEC AG ((Coin_Ack = 1 & Refund_Ack = 0) -> AX (Sum > 0)); 에서
+	SumTest : SPEC AG ((Coin_Ack = 1 & Refund_Ack = 0) -> AX ~(Sum > 0)); 가 아니라
+	SumTest : SPEC AG ~((Coin_Ack = 1 & Refund_Ack = 0) -> AX (Sum > 0)); 인듯 함
+
+	*/
+
+	/* 검증구문 자체에 대한 확증이 없음. */
+	booleant : SPEC AX EF ~(b1 = b2);
+
+	/* 입력은 동시에 하나 이상이 들어올 수 있음 */
+	InputCheck1 : SPEC EF ((Coin > 0) & Button_1 = 1);
+	/* InputCheck2 : SPEC AG ~((Coin > 0) & Button_1 = 1); */
+
+	/* 입력이 동시에 다 들어올 수도 있음 */
+	/* mutex2 : SPEC AG ~(Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund); */
+	mutex3 : SPEC EF (Coin & Button_0 & Button_1 & Button_2 & Button_3 & Refund);
+
+	/* 입력이 들어오지 않을 수도 있음. */
+	NoInputCheck1 : SPEC EF (((Coin < 0) & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0) = 0);
+	/* NoInputCheck2 : SPEC AG ~(((Coin < 0) & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0) = 0); */
+
+	/* 모든 Ack가 동시에 1이 되는 경우는 없음. */
+	
+	prop0 : SPEC AG ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack & NoInput_Ack);
+
+	/* v2 수정. NoInput추가 */
+	alwaysInputAck : SPEC EF ~((NoInput_Ack | Coin_Ack | Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack) = 0);
+	
+	/* mutex : assert ~(Coin_Ack & Button_0_Ack & Button_1_Ack & Button_2_Ack & Button_3_Ack & Refund_Ack); */
+
+	/* 입력이 들어왔는데 출력이 안나가는 경우는 없음 */
+	prop1 : SPEC EF (((Coin > 0) | Button_0 = 1 | Button_1 = 1 | Button_2 = 1 | Button_3 = 1 | Refund = 1) -> (Coin_Ack | Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack));
+	/* prop1_1 : SPEC AG ~(((Coin > 0) | Button_0 = 1 | Button_1 = 1 | Button_2 = 1 | Button_3 = 1 | Refund = 1) -> (Coin_Ack | Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack)); */
+
+	/* Coin_Ack가 들어왔는데 Refund Sum이 0보다 작은 경우는 없음. */
+	prop2 : SPEC AG ((Coin_Ack = 1) -> AX (Sum > 0));
+	sumTest_1 : SPEC EF ~((Coin_Ack = 1) -> AX (Sum <= 0));
+
+	/* Refund_Ack가 들어오면 Sum은 0이 됨. */
+	prop3 : SPEC AG ((Refund_Ack = 1) -> AX (Sum = 0));
+	refundTest1 : SPEC ((Refund_Ack = 1) -> AX (Sum = 0));
+	/*
+	만들긴 잘 만들어진듯 함. Refund
+	refundTest2 : SPEC ((Refund_Ack = 0) -> AX (Sum >= 0));
+	*/
+
+	/* Display는 항상 Sum의 값을 보여준다. */
+	displayTest : SPEC EF ~(Display ~= Sum);
+
+	/* Sum은 항상 100보다 클 수 없다. */
+	sumMaxTest : SPEC AG (Sum <= 100);
+	sumMaxTest2 : SPEC EF ~(Sum > 100);
+	prop8 : SPEC AG ~(Sum > 100);
+	/* SumMaxTest3 : SPEC AG ~(Sum = 100); */
+
+	TimeCheck1 : SPEC EF SYJ_TIME = 1000; 
+	/* TimeCheck2 : SPEC AG ~(SYJ_TIME = 1000);  */
+	
+	/* Time은 생각대로 동작하는 것 같은데 AX를 사용한 이런 검증 구문이 문제가 있는 듯 함.  */
+	/* TimeCheck3 : SPEC AX SYJ_TIME > SYJ_TIME; */
+
+
+	/* Button_3_Value 이상의 값이 들어올 경우 모든 Ramp에 불이 들어온다 */
+	/* Button_2_Value <= Sum < Button_3_Value 면 Button_3_Ramp = 0이고 Button_2_Ramp = 1임 */
+	buttonRamp3Check : SPEC AG ((Sum > Button_3_Value) -> (Button_0_Ramp & Button_1_Ramp & Button_2_Ramp & Button_3_Ramp));
+	buttonRamp2_1Check : SPEC EF ~((Sum < Button_3_Value ) & Button_3_Ramp = 1);
+	buttonRamp2_2Check : SPEC AG ((Sum >= Button_2_Value) -> (Button_2_Ramp));
+	buttonRamp2_3Check : SPEC AG (((Sum < Button_3_Value) & (Sum >= Button_2_Value) ) -> (Button_3_Ramp = 0 & Button_2_Ramp = 1));
+
+	/* TODO */
+	/* v2 수정
+	cupCheck_1 : SPEC AG (((Cup = 1) & (Button_0_Ack = 0 & Button_1_Ack = 0 & Button_2_Ack = 0 & Button_3_Ack = 0)) -> AX (Cup = 1));
+	*/
+	cupCheck_1 : SPEC AG (((Cup = 1) & (Button_0_Ack = 0 & Button_1_Ack = 0 & Button_2_Ack = 0 & Button_3_Ack = 0)) -> AX (Cup = 0));
+	cupCheck_2 : SPEC AG ((Cup = 1) & (Coin_Ack = 1 | Refund_Ack = 1) -> AX (Cup = 0));
+	cupCheck_3 : SPEC EF (((Cup = 1) & (Coin_Ack = 1 | Refund_Ack = 1)) -> AX (Cup = 0));
+	/* v2 수정
+	cupCheck_4 : SPEC AG (((Cup = 1) & (Refund_Ack = 1)) -> AX (Cup = 1));
+	*/
+	cupCheck_4 : SPEC AG (((Cup = 1) & (Refund_Ack = 1)) -> AX (Cup = 0));
+	/* cupCheck_5 : SPEC AG ((Cup = 1) & ((Refund_Ack = 1) -> AX (Cup = 0))); */
+	/* 6에서 잡을 수 있어야 되는 것 아닌가? Refund_Ack가 왔는데 그 다음에 Cup이 1인채로 있을 수 있는 path가 */
+	cupCheck_6 : SPEC EF (((Cup = 1) & (Refund_Ack = 1)) -> AX (Cup = 1));
+
+	/* EF를 쓰면 생각하는 것보다 해석 어려움. 한 번 발생할 수 있다는 것은 의미가 없고 */
+	/* Ack가 하나라도 들어오면 next state에서는 Cup이 1이 된다. */
+	/* v2 수정
+	prop4 : SPEC AG ((Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1) -> AX Cup);
+
+	Remain 추가하면서 이거 못쓰게 됨.
+	prop4 : SPEC AG ((Sum > 10 &  NoInput_Ack = 0 & (Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1)) -> AX Cup);
+
+	*/
+	/* Coffee_N_Remain을 추가하면서 못쓰게 됨. */
+	/* prop4_1 : SPEC EF ~((Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1) -> AX Cup); */
+	/* Cup_Remain을 추가하면서 못쓰게 됨. */
+	/* prop4 : SPEC AG (((Coffee_0_Remain > 0 & Coffee_1_Remain > 0 & Coffee_2_Remain > 0 & Coffee_3_Remain > 0) & Sum > 10 &
+	  NoInput_Ack = 0 & (Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1)) -> AX Cup); */
+	prop4 : SPEC AG (((Cup_Remain > 0 & Coffee_0_Remain > 0 & Coffee_1_Remain > 0 & Coffee_2_Remain > 0 & Coffee_3_Remain > 0) & Sum > 10 
+		& NoInput_Ack = 0 & (Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1)) -> AX Cup);
+	/*
+	prop4_1 : SPEC AG ~(((Cup_Remain > 0 & Coffee_0_Remain > 0 & Coffee_1_Remain > 0 & Coffee_2_Remain > 0 & Coffee_3_Remain > 0) & Sum > 10 
+		& NoInput_Ack = 0 & (Button_0_Ack = 1 | Button_1_Ack = 1 | Button_2_Ack = 1 | Button_3_Ack = 1)) -> AX Cup);
+	*/
+
+
+	/* AX에 부등호 연산 하는거 애매한 것 같음. */
+	prop5 : SPEC AG (Button_0_Ack = 1) -> AX Sum <= Sum;
+
+	/* 지금의 Cup이 1이면 다음의 Cup은 0이다. */
+
+	/* v2 수정
+	원래 저 구문이 안되는게 맞는 것임.
+	버튼의 입력 없이 한 타임이 지나야 컵이 빠지는데
+	컵이 있는 상태에서 또 컵이 들어올 수도 있기 때문.
+	prop6 : SPEC AG ((Cup = 1) -> AX (Cup = 0));
+	*/
+	/* prop6_1 : SPEC AG ~((Cup = 1) -> AX (Cup = 0)); */
+	/* prop6-2 Cup이 1이 나온 상황에서 또 1이 나올 수 있기 때문. */
+
+	/* v2 수정
+	이 경우 둘 다 있을 수 없음. Cup이 1인 상태에서 
+
+	prop6_2 : SPEC AG ((Cup = 1) -> AX (Cup = 1));
+	prop6_2 : SPEC AG ((Cup = 1) -> AX (Cup = 0));
+	*/
+	
+	prop7 : SPEC AG ((Coin > 0) & (Refund = 1)) -> AX (Sum > 0);
+	prop7_1 : SPEC AG ((Coin > 0) & (Refund = 1)) -> AX (Sum > 0);
+	prop7_2 : SPEC AG ((Coin_Ack = 1) & (Refund_Ack = 1)) -> AX (Sum > 0);
+
+	prop9 : SPEC (Refund_Ack = 1) -> EF ((Change > Sum) | (Change < Sum));
+
+	test7 : SPEC AG ( (Coin > 0 & Refund = 1 & Button_0 = 1 & Button_1 = 1 & Button_2 = 1 & Button_3 = 1) -> AX(Display > 0 | Change < 0) );
+
+
+	/* SCR로 해서 처리를 하면 좋음. 시뮬레이션 기능까지 있으면 진행상태도 볼 수 있음. 모델을 변경하거나 property를 추가하는 방식으로 처리를. */
+
+	prop9 : SPEC EF ~((~Ramp & Cup) | (Ramp & ~Cup));
+
+	checkNoInput_1 : SPEC ( AG (Coin = 0 & Refund = 0 & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0) -> (NoInput_Ack = 1) );
+	/* v2 수정
+	checkNoInput_2 : SPEC ( EF (Coin = 0 & Refund = 0 & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0) -> (NoInput_Ack = 0) );
+	*/
+
+	remainMinus_1 : SPEC EF (Coffee_3_Remain = 0);
+	/*
+	remainMinus_2 : SPEC AG (Coffee_3_Remain ~= 0);
+	*/
+
+	timeFlow_1 : SPEC (Coin = 0 & Refund = 0 & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0) -> AX (SYJ_TIME > 0);
+	/*
+	timeFlow_2 : SPEC (Coin = 0 & Refund = 0 & Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0) -> AG ~(SYJ_TIME = 200);
+	timeFlow_3 : SPEC (Coin = 0 & Refund = 0 ) -> AG ~(SYJ_TIME = 200);
+	*/
+
+
+	coffeeAvailableCheck_1 : SPEC AG ((Coffee_0_Remain = 0) -> (Coffee_0_Available = 0));
+	/*
+	coffeeAvailableCheck_2 : SPEC EF ( (Coffee_0_Remain = 0) & (Coffee_0_Available = 1) );
+	coffeeAvailableCheck_3 : SPEC EF ( (Coffee_0_Available = 0) & (Coffee_0_Remain > 0) );
+	coffeeAvailableCheck_4 : SPEC EF ( (Coffee_0_Available = 1) & (Coffee_0_Remain = 0) );
+	*/
+	
+
+
+
+	idleCheck_1 : SPEC (IdleTimeCount = 0) -> EF (Sum = 0);
+	/*
+	idleCheck_2 : SPEC (IdleTimeCount = 0) -> AG (Sum = 0);
+	idleCheck_3 : SPEC (IdleTimeCount = 0) -> AG ~(Sum = 0);
+	idleCheck_4 : SPEC (IdleTimeCount = 0) -> AX (Sum = 0);
+	idleCheck_5 : SPEC (IdleTimeCount = 2) -> X (Sum = 0);
+	*/
+	
+
+	cupRemainCheck : SPEC ( (Sum = 10) & (Cup_Remain = 0) & (Coffee_3_Remain > 0) & (Cup = 0) &
+	 (Button_0_Ack = 0 & Button_1_Ack = 0 & Button_2_Ack = 0 & Button_3_Ack = 1)) -> EF (Cup = 1);
+
+
+
+}

@@ -1,0 +1,17 @@
+module main(temp){
+
+	input temp : boolean;
+
+
+
+	idleCheck_1 : SPEC (temp = 0) -> EX(temp = 0) -> EX(temp = 1);
+	/*
+
+	idleCheck_2 : SPEC (temp = 0) -> AX ~(temp = 0);
+	idleCheck_3 : SPEC (temp = 0) -> AX ~(temp = 1);
+	
+	*/
+	idleCheck_4 : SPEC (temp = 0) -> EX(temp = 0) -> EX(temp = 1);
+
+
+}
