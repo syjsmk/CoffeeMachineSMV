@@ -5,6 +5,8 @@
 #define Button_2_Value 7
 #define Button_3_Value 10
 
+#define MAX_VALUE 100;
+
 
 /*
 
@@ -77,11 +79,13 @@ TODO : state에 따른 일처리를 실제로 다른 모듈에서 하고 있는�
 잘 모르겠음. 결국 MainControlSWModule에서 다 하는거 아닌가 하는 생각이
 든다는 것임. 처리해야 할 것 같음.
 */
+
+
 MODULE MainControlSWModule(SYJ_TIME, buttonControlSWModule, displayModule, moneyCalculateModule, coffeeMakingModule) {
 
 	input SYJ_TIME : 0..1000;
-
 	state : {Init, Sum_Max, Turn_On_Ramp, Input_Button_0, Input_Button_1, Input_Button_2, Input_Button_3, No_Coffee_0, No_Coffee_1, No_Coffee_2, No_Coffee_3, No_Cup, Cup_And_Ramp};
+	
 	init(state) := Init;
 
 	NoInput_Ack : boolean;
@@ -156,17 +160,27 @@ state template
 	}
 */
 
+	moneyCalculateModule.state := state;
+	displayModule.state := state;
+	coffeeMakingModule.state := state;
+	buttonControlSWModule.state := state;
+
 	switch(state) {
 		Init: {
 
-			next(displayModule.Led) := 4;
+			
 			if(NoInput_Ack = 1) {
 				next(state) := Init;
 				
+				
 				if(IdleTimeCount = 2) {
+					moneyCalculateModule.IdleTimeCount := IdleTimeCount;
+					displayModule.IdleTimeCount := IdleTimeCount;
+					coffeeMakingModule.IdleTimeCount := IdleTimeCount;
+					buttonControlSWModule.IdleTimeCount := IdleTimeCount;
+
 					next(IdleTimeCount) := 0;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+
 				} else {
 					next(IdleTimeCount) := IdleTimeCount + 1;
 				}
@@ -174,13 +188,12 @@ state template
 			/*
 			} else if(moneyCalculateModule.Coin_Ack = 0 & (buttonControlSWModule.Refund_Ack = 1 | buttonControlSWModule.Button_0_Ack = 1 | buttonControlSWModule.Button_1_Ack = 1 | buttonControlSWModule.Button_2_Ack = 1 | buttonControlSWModule.Button_3_Ack = 1)) { 
 			*/
-			} else if(NoInput_Ack = 0 & moneyCalculateModule.Coin_Ack = 0) { 
+			} else if(NoInput_Ack = 0 & moneyCalculateModule.Coin_Ack = 0) {
 				next(state) := Init;
 				next(IdleTimeCount) := 0;
 			} else if(NoInput_Ack = 0 & moneyCalculateModule.Coin_Ack = 1) {
 				next(state) := Turn_On_Ramp;
 				next(IdleTimeCount) := 0;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum + moneyCalculateModule.Coin;
 			}
 		};
 		
@@ -188,72 +201,43 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
-
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
 				} else if(coffeeMakingModule.Coffee_0_Remain = 0) {
-					next(state) := No_Coffee_0;
 				} else {
-					next(state) := Input_Button_0;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
-
+				
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
 				} else {
-					next(state) := Input_Button_1;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
 				} else {
-					next(state) := Input_Button_2;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+				
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
 				} else {
-					next(state) := Input_Button_3;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
-
-				next(state) := state;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
 					
 			}
 		};
@@ -264,152 +248,142 @@ state template
 				if(IdleTimeCount = 2) {
 					next(IdleTimeCount) := 0;
 					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
 				} else {
 					next(IdleTimeCount) := IdleTimeCount + 1;
-					/*
-					next(state) := Turn_On_Ramp;
-					*/
 					next(state) := state;
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
-
+				
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+				
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+					
 				} else {
 					if(coffeeMakingModule.Coffee_0_Remain > 0) {
-						next(state) := Input_Button_0;
+
 					} else {
-						next(state) := No_Coffee_0;
 					}
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+				
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+					
 				} else {
 					if(coffeeMakingModule.Coffee_1_Remain > 0) {
-						next(state) := Input_Button_1;
+		
 					} else {
-						next(state) := No_Coffee_1;
+		
 					}
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else {
 					if(coffeeMakingModule.Coffee_2_Remain > 0) {
-						next(state) := Input_Button_2;
+		
 					} else {
-						next(state) := No_Coffee_2;
+		
 					}
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else {
 					if(coffeeMakingModule.Coffee_3_Remain > 0) {
-						next(state) := Input_Button_3;
+		
 					} else {
-						next(state) := No_Coffee_3;
+		
 					}
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+
 
 				if(moneyCalculateModule.Sum + moneyCalculateModule.Coin >= 100) {
-					next(state) := Sum_Max;
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Coin;
+	
+	
+	
 					
 				} else {
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum + moneyCalculateModule.Coin;
-					next(state) := Turn_On_Ramp;
+	
+	
 					
 				}
 			}
 		};
 
 		Input_Button_0: {
-				next(IdleTimeCount) := 0;
+
 				if(moneyCalculateModule.Sum >= Button_0_Value) {
 
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum - Button_0_Value;
-					next(coffeeMakingModule.Cup) := 1;
-					next(displayModule.Ramp) := 1;
-					next(coffeeMakingModule.Cup_Remain) := coffeeMakingModule.Cup_Remain - 1;
-					next(coffeeMakingModule.Coffee_0_Remain) := coffeeMakingModule.Coffee_0_Remain - 1;
-					next(state) := Cup_And_Ramp;
-					next(displayModule.Led) := 0;
+	
+	
+	
+	
+	
+	
 				} else {
-					next(state) := state;
+	
 				}
 			};
 
 		Input_Button_1: {
-				next(IdleTimeCount) := 0;
+
 				if(moneyCalculateModule.Sum >= Button_1_Value) {
 
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum - Button_1_Value;
-					next(coffeeMakingModule.Cup) := 1;
-					next(displayModule.Ramp) := 1;
-					next(coffeeMakingModule.Cup_Remain) := coffeeMakingModule.Cup_Remain - 1;
-					next(coffeeMakingModule.Coffee_1_Remain) := coffeeMakingModule.Coffee_1_Remain - 1;
-					next(state) := Cup_And_Ramp;
-					next(displayModule.Led) := 1;
+	
+	
+	
+	
+	
+	
+	
 				} else {
-					next(state) := state;
+	
 				}
 			};
 
 		Input_Button_2: {
-				next(IdleTimeCount) := 0;
+
 				if(moneyCalculateModule.Sum >= Button_2_Value) {
 
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum - Button_2_Value;
-					next(coffeeMakingModule.Cup) := 1;
-					next(displayModule.Ramp) := 1;
-					next(coffeeMakingModule.Cup_Remain) := coffeeMakingModule.Cup_Remain - 1;
-					next(coffeeMakingModule.Coffee_2_Remain) := coffeeMakingModule.Coffee_2_Remain - 1;
-					next(state) := Cup_And_Ramp;
-					next(displayModule.Led) := 2;
+	
+	
+	
+	
+	
+	
+	
 				} else {
-					next(state) := state;
+	
 				}
 			};
 
 		Input_Button_3: {
-				next(IdleTimeCount) := 0;
+
 				if(moneyCalculateModule.Sum >= Button_3_Value) {
 
-					next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum - Button_3_Value;
-					next(coffeeMakingModule.Cup) := 1;
-					next(displayModule.Ramp) := 1;
-					next(coffeeMakingModule.Cup_Remain) := coffeeMakingModule.Cup_Remain - 1;
-					next(coffeeMakingModule.Coffee_3_Remain) := coffeeMakingModule.Coffee_3_Remain - 1;
-					next(state) := Cup_And_Ramp;
-					next(displayModule.Led) := 3;
+	
+	
+	
+	
+	
+	
+	
 				} else {
-					next(state) := state;
+	
 				}
 			};
 
@@ -417,65 +391,65 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+	
+	
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
-				next(state) := No_Coffee_0;
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
+	
 				} else {
-					next(state) := Input_Button_1;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
+	
 				} else {
-					next(state) := Input_Button_2;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
+	
 				} else {
-					next(state) := Input_Button_3;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
@@ -484,72 +458,72 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+	
+	
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_0_Remain = 0) {
-					next(state) := No_Coffee_0;
+	
 				} else {
-					next(state) := Input_Button_0;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
+	
 				} else {
-					next(state) := Input_Button_1;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
+	
 				} else {
-					next(state) := Input_Button_2;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
+	
 				} else {
-					next(state) := Input_Button_3;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
@@ -558,72 +532,72 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+	
+	
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_0_Remain = 0) {
-					next(state) := No_Coffee_0;
+	
 				} else {
-					next(state) := Input_Button_0;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
+	
 				} else {
-					next(state) := Input_Button_1;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
+	
 				} else {
-					next(state) := Input_Button_2;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
+	
 				} else {
-					next(state) := Input_Button_3;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
@@ -632,72 +606,72 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+	
+	
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_0_Remain = 0) {
-					next(state) := No_Coffee_0;
+	
 				} else {
-					next(state) := Input_Button_0;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
+	
 				} else {
-					next(state) := Input_Button_1;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
+	
 				} else {
-					next(state) := Input_Button_2;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
+	
 				} else {
-					next(state) := Input_Button_3;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
@@ -706,107 +680,105 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
-					next(moneyCalculateModule.Sum) := 0;
-					next(moneyCalculateModule.Change) := moneyCalculateModule.Sum;
+	
+	
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := state;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_0_Remain = 0) {
-					next(state) := No_Coffee_0;
+	
 				} else {
-					next(state) := Input_Button_0;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_1_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_1_Remain = 0) {
-					next(state) := No_Coffee_1;
+	
 				} else {
-					next(state) := Input_Button_1;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_2_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_2_Remain = 0) {
-					next(state) := No_Coffee_2;
+	
 				} else {
-					next(state) := Input_Button_2;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
+
 
 				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
+	
 				} else if(coffeeMakingModule.Coffee_3_Remain = 0) {
-					next(state) := No_Coffee_3;
+	
 				} else {
-					next(state) := Input_Button_3;
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
 
 		Cup_And_Ramp: {
-			next(coffeeMakingModule.Cup) := 0;
-			next(displayModule.Ramp) := 0;
 
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
-					next(IdleTimeCount) := 0;
-					next(state) := Init;
+	
+	
 				} else {
-					next(IdleTimeCount) := IdleTimeCount + 1;
-					next(state) := Turn_On_Ramp;
+	
+	
 				}
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Refund_Ack = 1) {
-				next(moneyCalculateModule.Sum) := 0;
-				next(state) := Init;
-				next(IdleTimeCount) := 0;
+
+
+
 
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1 | buttonControlSWModule.Button_1_Ack = 1 | buttonControlSWModule.Button_2_Ack = 1 | buttonControlSWModule.Button_3_Ack = 1) {
-				next(IdleTimeCount) := 0;
-				next(state) := Turn_On_Ramp;
+
+
 
 				
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
 
-				next(IdleTimeCount) := 0;
 
-				next(state) := Turn_On_Ramp;
-				next(moneyCalculateModule.Sum) := moneyCalculateModule.Sum;
-				next(moneyCalculateModule.Change) := Coin;
+
+
+
+
 					
 			}
 		};
@@ -843,58 +815,6 @@ state template
 	timeCheck_2 : SPEC AG ( AG ~(SYJ_TIME = 1000) );
 	*/
 
-	stateChange_1 : SPEC AG ( (state = Init & moneyCalculateModule.Coin_Ack = 1) -> AX (state = Turn_On_Ramp) );
-	/*
-	counter_example
-	stateChange_1_1 : SPEC AG ( (state = Init & moneyCalculateModule.Coin_Ack = 1) -> AX (state = Init) );
-
-	결국 Coin_Ack와 다른 Ack가 동시에 들어오면 Coin_Ack 우선으로 처리한다는 소리
-	stateChange_2_1 : SPEC AG ( (state = Init & moneyCalculateModule.Coin_Ack = 1 & (buttonControlSWModule.Refund_Ack = 1 | buttonControlSWModule.Button_0_Ack = 1 | buttonControlSWModule.Button_1_Ack = 1 | buttonControlSWModule.Button_2_Ack = 1 | buttonControlSWModule.Button_3_Ack = 1)) -> AX (state = Init) );
-	*/
-	stateChange_2 : SPEC AG ( (state = Init & moneyCalculateModule.Coin_Ack = 1 & (buttonControlSWModule.Refund_Ack = 1 | buttonControlSWModule.Button_0_Ack = 1 | buttonControlSWModule.Button_1_Ack = 1 | buttonControlSWModule.Button_2_Ack = 1 | buttonControlSWModule.Button_3_Ack = 1)) -> AX (state = Turn_On_Ramp) );
-
-	/*
-	coffeeRemain_1 : SPEC AG ( coffeeMakingModule.Coffee_0_Remain = 5 );
-	coffeeRemain_2 : SPEC AG ~( coffeeMakingModule.Coffee_0_Remain = 3 );
-	*/
-
-	checkAllState_1 : SPEC AG EF 1;
-
-	stateRelateCheck_1 : SPEC AG ((state = Init) -> AX (state = Turn_On_Ramp | state = Init));
-
-	stateRelateCheck_2 : SPEC AG ((state = Turn_On_Ramp) -> AX (state = Sum_Max | state = Init | state = Turn_On_Ramp | 
-		state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2 | state = Input_Button_3 | 
-		state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2 | state = No_Coffee_3 | state = No_Cup));
-
-	stateRelateCheck_3 : SPEC AG ((state = Sum_Max) -> AX (state = Sum_Max | state = Init | state = Turn_On_Ramp | 
-		state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2 | state = Input_Button_3 | 
-		state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2 | state = No_Coffee_3 | state = No_Cup));
-
-	stateRelateCheck_4 : SPEC AG ((state = Input_Button_0) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
-	 | state = Input_Button_3 | state = Cup_And_Ramp));
-
-	stateRelateCheck_5 : SPEC AG ((state = Input_Button_1) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
-	 | state = Input_Button_3 | state = Cup_And_Ramp));
-
-	stateRelateCheck_6 : SPEC AG ((state = Input_Button_2) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
-	 | state = Input_Button_3 | state = Cup_And_Ramp));
-
-	stateRelateCheck_7 : SPEC AG ((state = Input_Button_3) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
-	 | state = Input_Button_3 | state = Cup_And_Ramp));
-
-	stateRelateCheck_8 : SPEC AG ((state = No_Coffee_0) -> AX (state = Input_Button_1 | state = Input_Button_2
-	 | state = Input_Button_3 | state = Cup_And_Ramp | state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2
-	  | state = No_Coffee_3 | state = Init | state = Turn_On_Ramp));
-	
-	stateRelateCheck_9 : SPEC AG ((state = No_Coffee_0) -> AG ~(state = Input_Button_0));
-	/*
-	*/
-	stateRelateCheck_9_1 : SPEC AG ((state = No_Coffee_0) -> EF (state = Input_Button_0));
-	stateRelateCheck_9_2 : SPEC AG ((state = No_Coffee_0) -> EF (state = Input_Button_1));
-
-	stateRelateCheck_10 : SPEC AG ((state = No_Cup) -> AX (state = No_Cup | state = Turn_On_Ramp | state = Init));
-
-	stateRelateCheck_11 : SPEC AG ((state = Cup_And_Ramp) -> AX (state = Turn_On_Ramp | state = Init));
 
 }
 
@@ -904,6 +824,11 @@ MODULE ButtonControlSWModule(SYJ_TIME, Button_0, Button_1, Button_2, Button_3, R
 	input Button_0, Button_1, Button_2, Button_3, Refund : boolean;
 
 	output Button_0_Ack, Button_1_Ack, Button_2_Ack, Button_3_Ack, Refund_Ack : boolean;
+
+	state : {Init, Sum_Max, Turn_On_Ramp, Input_Button_0, Input_Button_1, Input_Button_2, Input_Button_3, No_Coffee_0, No_Coffee_1, No_Coffee_2, No_Coffee_3, No_Cup, Cup_And_Ramp};
+
+	IdleTimeCount : 0..2;
+
 
 	if(Button_0 = 1) {
 			Button_0_Ack := 1;
@@ -1024,10 +949,14 @@ MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Butt
 	input SYJ_TIME : 0..1000;
 	Sum : 0..100;
 
+	state : {Init, Sum_Max, Turn_On_Ramp, Input_Button_0, Input_Button_1, Input_Button_2, Input_Button_3, No_Coffee_0, No_Coffee_1, No_Coffee_2, No_Coffee_3, No_Cup, Cup_And_Ramp};
+
 
 	output Display : 0..100;
 	output Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp, Cup_Available, Coffee_0_Available, Coffee_1_Available, Coffee_2_Available, Coffee_3_Available, Ramp : boolean;
 	output Led : 0..4;
+
+	IdleTimeCount : 0..2;
 
 
 	if(Sum >= Button_3_Value) {
@@ -1061,6 +990,8 @@ MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Butt
 	switch(state) {
 		Init: {
 
+			next(Led) := 4;
+
 		};
 
 		Sum_Max: {
@@ -1072,7 +1003,11 @@ MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Butt
 		};
 
 		Input_Button_0: {
+			if(Sum >= Button_0_Value) {
 
+					
+			} else {
+			}
 		};
 
 		Input_Button_1: {
@@ -1117,6 +1052,7 @@ MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Butt
 
 MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) {
 
+
 	input SYJ_TIME : 0..1000;
 	input Coin : CoinValue;
 	output Change : 0..100;
@@ -1129,6 +1065,11 @@ MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) 
 	init(Sum) := 0;
 
 
+	state : {Init, Sum_Max, Turn_On_Ramp, Input_Button_0, Input_Button_1, Input_Button_2, Input_Button_3, No_Coffee_0, No_Coffee_1, No_Coffee_2, No_Coffee_3, No_Cup, Cup_And_Ramp};
+	IdleTimeCount : 0..2;
+
+
+
 	if(Coin = 1 | Coin = 5 | Coin = 10) {
 		Coin_Ack := 1;
 	} else {
@@ -1139,50 +1080,60 @@ MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) 
 	switch(state) {
 		Init: {
 
+			if(Coin_Ack = 1) {
+				next(Sum) := Sum + Coin;
+
+			} else {
+				if(IdleTimeCount = 2) {
+					next(Change) := Sum;
+				}
+			}
 		};
 
 		Sum_Max: {
+			if(Coin_Ack = 1) {
 
+			} else {
+
+			}
 		};
 
 		Turn_On_Ramp: {
+			if(Coin_Ack = 1) {
+				next(Sum) := Sum + Coin;
 
+			} else {
+				if(IdleTimeCount = 2) {
+					next(Change) := Sum;
+				}
+			}
 		};
 
 		Input_Button_0: {
-
 		};
 
 		Input_Button_1: {
-
 		};
 
 		Input_Button_2: {
-
 		};
 
 		Input_Button_3: {
-
 		};
 
 		No_Coffee_0: {
-
 		};
 
 		No_Coffee_1: {
-
 		};
 
 		No_Coffee_2: {
-
 		};
 
 		No_Coffee_3: {
-
 		};
 
 		No_Cup: {
-
 		};
 
 		Cup_And_Ramp: {
@@ -1198,6 +1149,24 @@ MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) 
 	/**************************************************************/
 
 	coinAck_1 : SPEC AG ( (Coin > 0) -> (Coin_Ack = 1) );
+	/*
+	CounterExample
+	coinAck_2 : SPEC AG ( (Coin > 0) -> (Coin_Ack = 0) );
+	*/
+
+
+	moneyMax_1 : SPEC EF (Sum = 100);
+
+	/*
+	CounterExample
+	moneyMax_2 : SPEC AG ~(Sum = 100);
+	*/
+
+	initToTurnOnRamp_1 : SPEC AG ( (state = Init & Coin_Ack = 1)  -> AX (state = Turn_On_Ramp));
+	/*
+	CounterExample
+	initToTurnOnRamp_2 : SPEC AG ( (state = Init & Coin_Ack = 1)  -> AG ~(state = Turn_On_Ramp));
+	*/
 
 }
 
@@ -1208,12 +1177,16 @@ MODULE CoffeeMakingModule(SYJ_TIME, Cup) {
 
 	input SYJ_TIME : 0..1000;
 
+	state : {Init, Sum_Max, Turn_On_Ramp, Input_Button_0, Input_Button_1, Input_Button_2, Input_Button_3, No_Coffee_0, No_Coffee_1, No_Coffee_2, No_Coffee_3, No_Cup, Cup_And_Ramp};
+
 /*
 	input Cup_Remain, Coffee_0_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain : 0..5;
 */
 	Cup_Remain, Coffee_0_Remain, Coffee_1_Remain, Coffee_2_Remain, Coffee_3_Remain : 0..5;
 
 	output Cup : boolean;
+
+	IdleTimeCount : 0..2;
 
 
 	init(Cup_Remain) := 5;
@@ -1334,6 +1307,7 @@ module main(Coin, Button_0, Button_1, Button_2, Button_3, Button_0_Ramp, Button_
 	/* output Coin_Remain : 0..100; */
 	Coin_Remain : 0..100;
 	Sum : 0..100;
+
 
 	/* added */
 	
