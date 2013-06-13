@@ -97,6 +97,65 @@ MODULE MainControlSWModule(SYJ_TIME, buttonControlSWModule, displayModule, money
 
 	displayModule.Sum := moneyCalculateModule.Sum;
 
+/*
+state template
+
+	switch(state) {
+		Init: {
+
+		};
+
+		Sum_Max: {
+
+		};
+
+		Turn_On_Ramp: {
+
+		};
+
+		Input_Button_0: {
+
+		};
+
+		Input_Button_1: {
+
+		};
+
+		Input_Button_2: {
+
+		};
+
+		Input_Button_3: {
+
+		};
+
+		No_Coffee_0: {
+
+		};
+
+		No_Coffee_1: {
+
+		};
+
+		No_Coffee_2: {
+
+		};
+
+		No_Coffee_3: {
+
+		};
+
+		No_Cup: {
+
+		};
+
+		Cup_And_Ramp: {
+
+		};
+
+	}
+*/
+
 	switch(state) {
 		Init: {
 
@@ -894,6 +953,62 @@ MODULE ButtonControlSWModule(SYJ_TIME, Button_0, Button_1, Button_2, Button_3, R
 	}
 
 
+	switch(state) {
+		Init: {
+
+		};
+
+		Sum_Max: {
+
+		};
+
+		Turn_On_Ramp: {
+
+		};
+
+		Input_Button_0: {
+
+		};
+
+		Input_Button_1: {
+
+		};
+
+		Input_Button_2: {
+
+		};
+
+		Input_Button_3: {
+
+		};
+
+		No_Coffee_0: {
+
+		};
+
+		No_Coffee_1: {
+
+		};
+
+		No_Coffee_2: {
+
+		};
+
+		No_Coffee_3: {
+
+		};
+
+		No_Cup: {
+
+		};
+
+		Cup_And_Ramp: {
+
+		};
+
+	}
+
+
 	mustAck_1 : SPEC AG ((Button_0 = 1 | Button_1 = 1 | Button_2 = 1 | Button_3 = 1 | Refund = 1) -> (Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack));
 
 	/*
@@ -942,6 +1057,62 @@ MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Butt
 		Button_3_Ramp := 0;
 	}
 
+
+	switch(state) {
+		Init: {
+
+		};
+
+		Sum_Max: {
+
+		};
+
+		Turn_On_Ramp: {
+
+		};
+
+		Input_Button_0: {
+
+		};
+
+		Input_Button_1: {
+
+		};
+
+		Input_Button_2: {
+
+		};
+
+		Input_Button_3: {
+
+		};
+
+		No_Coffee_0: {
+
+		};
+
+		No_Coffee_1: {
+
+		};
+
+		No_Coffee_2: {
+
+		};
+
+		No_Coffee_3: {
+
+		};
+
+		No_Cup: {
+
+		};
+
+		Cup_And_Ramp: {
+
+		};
+
+	}
+
 }
 
 MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) {
@@ -962,6 +1133,62 @@ MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) 
 		Coin_Ack := 1;
 	} else {
 		Coin_Ack := 0;
+	}
+
+
+	switch(state) {
+		Init: {
+
+		};
+
+		Sum_Max: {
+
+		};
+
+		Turn_On_Ramp: {
+
+		};
+
+		Input_Button_0: {
+
+		};
+
+		Input_Button_1: {
+
+		};
+
+		Input_Button_2: {
+
+		};
+
+		Input_Button_3: {
+
+		};
+
+		No_Coffee_0: {
+
+		};
+
+		No_Coffee_1: {
+
+		};
+
+		No_Coffee_2: {
+
+		};
+
+		No_Coffee_3: {
+
+		};
+
+		No_Cup: {
+
+		};
+
+		Cup_And_Ramp: {
+
+		};
+
 	}
 
 
@@ -994,6 +1221,62 @@ MODULE CoffeeMakingModule(SYJ_TIME, Cup) {
 	init(Coffee_1_Remain) := 5;
 	init(Coffee_2_Remain) := 5;
 	init(Coffee_3_Remain) := 5;
+
+
+	switch(state) {
+		Init: {
+
+		};
+
+		Sum_Max: {
+
+		};
+
+		Turn_On_Ramp: {
+
+		};
+
+		Input_Button_0: {
+
+		};
+
+		Input_Button_1: {
+
+		};
+
+		Input_Button_2: {
+
+		};
+
+		Input_Button_3: {
+
+		};
+
+		No_Coffee_0: {
+
+		};
+
+		No_Coffee_1: {
+
+		};
+
+		No_Coffee_2: {
+
+		};
+
+		No_Coffee_3: {
+
+		};
+
+		No_Cup: {
+
+		};
+
+		Cup_And_Ramp: {
+
+		};
+
+	}
 
 	/*
 	??
