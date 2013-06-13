@@ -1,0 +1,6 @@
+*.expl
+*.out
+*.stats
+*.update
+*.warn
+.smv_history
