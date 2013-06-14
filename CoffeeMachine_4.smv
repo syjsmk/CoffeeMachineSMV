@@ -165,6 +165,11 @@ state template
 	coffeeMakingModule.state := state;
 	buttonControlSWModule.state := state;
 
+	moneyCalculateModule.IdleTimeCount := IdleTimeCount;
+	displayModule.IdleTimeCount := IdleTimeCount;
+	coffeeMakingModule.IdleTimeCount := IdleTimeCount;
+	buttonControlSWModule.IdleTimeCount := IdleTimeCount;
+
 	switch(state) {
 		Init: {
 
@@ -174,10 +179,7 @@ state template
 				
 				
 				if(IdleTimeCount = 2) {
-					moneyCalculateModule.IdleTimeCount := IdleTimeCount;
-					displayModule.IdleTimeCount := IdleTimeCount;
-					coffeeMakingModule.IdleTimeCount := IdleTimeCount;
-					buttonControlSWModule.IdleTimeCount := IdleTimeCount;
+					
 
 					next(IdleTimeCount) := 0;
 
@@ -201,6 +203,10 @@ state template
 			if(NoInput_Ack = 1) {
 				
 				if(IdleTimeCount = 2) {
+					
+					next(IdleTimeCount) := 0;
+
+					next(state) := Init;
 				} else {
 				}
 
@@ -1086,6 +1092,7 @@ MODULE MoneyCalculateModule(SYJ_TIME, Coin, Change, Coin_Ack, Coin_Remain, Sum) 
 			} else {
 				if(IdleTimeCount = 2) {
 					next(Change) := Sum;
+					next(Sum) := 0;
 				}
 			}
 		};
