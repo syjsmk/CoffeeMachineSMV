@@ -786,11 +786,7 @@ state template
 
 				next(IdleTimeCount) := 0;
 
-				if(coffeeMakingModule.Cup_Remain = 0) {
-					next(state) := No_Cup;
-				} else {
-					next(state) := Turn_On_Ramp;
-				}
+				next(state) := Turn_On_Ramp;
 
 				
 			} else if(moneyCalculateModule.Coin_Ack = 1) {
@@ -853,6 +849,55 @@ state template
 	stateCheck_5 : SPEC AG ( (coffeeMakingModule.Cup_Remain = 0) -> AX (state = No_Cup) );
 	*/
 	stateCheck_5 : SPEC EF ( (coffeeMakingModule.Cup_Remain = 0) -> (state = No_Cup) );
+
+
+
+	stateRelateCheck_1 : SPEC AG ((state = Init) -> AX (state = Turn_On_Ramp | state = Init));
+
+	stateRelateCheck_2 : SPEC AG ((state = Turn_On_Ramp) -> AX (state = Sum_Max | state = Init | state = Turn_On_Ramp | 
+		state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2 | state = Input_Button_3 | 
+		state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2 | state = No_Coffee_3 | state = No_Cup));
+
+	stateRelateCheck_3 : SPEC AG ((state = Sum_Max) -> AX (state = Sum_Max | state = Init | state = Turn_On_Ramp | 
+		state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2 | state = Input_Button_3 | 
+		state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2 | state = No_Coffee_3 | state = No_Cup));
+
+	stateRelateCheck_4 : SPEC AG ((state = Input_Button_0) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
+	 | state = Input_Button_3 | state = Cup_And_Ramp));
+
+	stateRelateCheck_5 : SPEC AG ((state = Input_Button_1) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
+	 | state = Input_Button_3 | state = Cup_And_Ramp));
+
+	stateRelateCheck_6 : SPEC AG ((state = Input_Button_2) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
+	 | state = Input_Button_3 | state = Cup_And_Ramp));
+
+	stateRelateCheck_7 : SPEC AG ((state = Input_Button_3) -> AX (state = Input_Button_0 | state = Input_Button_1 | state = Input_Button_2
+	 | state = Input_Button_3 | state = Cup_And_Ramp));
+
+	stateRelateCheck_8 : SPEC AG ((state = No_Coffee_0) -> AX (state = Input_Button_1 | state = Input_Button_2
+	 | state = Input_Button_3 | state = Cup_And_Ramp | state = No_Coffee_0 | state = No_Coffee_1 | state = No_Coffee_2
+	  | state = No_Coffee_3 | state = Init | state = Turn_On_Ramp));
+	
+	stateRelateCheck_9 : SPEC AG ((state = No_Coffee_0) -> AG ~(state = Input_Button_0));
+	/*
+	stateRelateCheck_9_1 : SPEC AG ((state = No_Coffee_0) -> EF (state = Input_Button_0));
+	stateRelateCheck_10 : SPEC AG ((state = No_Cup) -> AX (state = No_Cup | state = Turn_On_Ramp | state = Init));
+	*/
+	stateRelateCheck_9_2 : SPEC AG ((state = No_Coffee_0) -> EF (state = Input_Button_1));
+
+
+	stateRelateCheck_11 : SPEC AG ((state = Cup_And_Ramp) -> AX (state = Turn_On_Ramp | state = Init));
+	stateRelateCheck_11_1 : SPEC AG ((coffeeMakingModule.Coffee_1_Remain > 0 & coffeeMakingModule.Cup_Remain > 0 
+		& state = Cup_And_Ramp) -> EF (state = Input_Button_1));
+	/*
+	stateRelateCheck_11_2 : SPEC AG ((state = Cup_And_Ramp) -> EF (state = Input_Button_1));
+	*/
+	
+	timeCheck : SPEC AG EF (SYJ_TIME = 1000);
+	/*
+	CounterExample
+	timeCheck_1 : SPEC AG ~(SYJ_TIME = 1000);
+	*/
 
 }
 
@@ -985,6 +1030,9 @@ MODULE ButtonControlSWModule(SYJ_TIME, Button_0, Button_1, Button_2, Button_3, R
 	mustAck_2 : SPEC AG ( (Button_0 = 1 | Button_1 = 1 | Button_2 = 1 | Button_3 = 1 | Refund = 1) -> (Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack));
 	mustAck_3 : SPEC EF ~( (Button_0 = 1 | Button_1 = 1 | Button_2 = 1 | Button_3 = 1 | Refund = 1) -> (Button_0_Ack | Button_1_Ack | Button_2_Ack | Button_3_Ack | Refund_Ack));
 	*/
+
+	cannotAck_1 : SPEC EF (Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0);
+	cannotAck_2 : SPEC EF ~(Button_0 = 0 & Button_1 = 0 & Button_2 = 0 & Button_3 = 0 & Refund = 0);
 }
 
 MODULE DisplayModule(SYJ_TIME, Button_0_Ramp, Button_1_Ramp, Button_2_Ramp, Button_3_Ramp,
