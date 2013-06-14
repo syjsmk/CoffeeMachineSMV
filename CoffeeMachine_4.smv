@@ -325,8 +325,6 @@ state template
 				next(IdleTimeCount) := 0;
 			} else if(moneyCalculateModule.Coin_Ack = 0 & buttonControlSWModule.Button_0_Ack = 1) {
 
-				
-
 				if(coffeeMakingModule.Cup_Remain = 0) {
 					next(state) := No_Cup;
 				} else {
@@ -370,7 +368,7 @@ state template
 					next(state) := No_Cup;
 				} else {
 					if(coffeeMakingModule.Coffee_3_Remain > 0) {
-						next(state) := No_Cup;
+						next(state) := Input_Button_3;
 					} else {
 						next(state) := No_Coffee_3;
 					}
@@ -383,7 +381,6 @@ state template
 					next(state) := Sum_Max;
 	
 				} else {
-	
 	
 					next(state) := Turn_On_Ramp;
 				}
